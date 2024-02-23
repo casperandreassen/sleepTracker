@@ -15,6 +15,11 @@ function convertMilliSecondsToTimeString(milli: number): string {
     : `${hours} hours and ${minutes} minutes.`;
 }
 
+const actionMap = {
+  "sleep": "Fell asleep",
+  "wake": "Woke up",
+};
+
 Deno.serve(async (req) => {
   const authHeader = req.headers.get("Authorization")!;
   const supabaseClient = createClient<Database>(
@@ -57,8 +62,15 @@ Deno.serve(async (req) => {
       body {
         background-color: #EEEEEE;
         font-family: Arial, Helvetica, sans-serif;
-        margin: 0;
+        margin: 20px;
         padding: 0;
+        color: #3D3B40;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        max-width: 90%;
+        min-width: 50%;
       }
       .list {
         margin: 20px 40px;
@@ -70,22 +82,88 @@ Deno.serve(async (req) => {
       li {
         margin-bottom: 10px;
       }
+
+      .container {
+        padding: 10px;
+        border: 0px;
+        background-color: #FFFFFF;
+        border-radius: 10px;
+        box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); 
+        width: 100%;
+      }
+
+      .status_container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      }
+
+      .tag {
+        font-size: 12px;
+        padding: 0px;
+        margin: 0px;
+      }
+
+      .info {
+        font-size: 15px;
+        padding: 0px;
+        margin: 0px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+    }
+
+    th {
+        background-color: #80BCBD;
+        color: white;
+    }
+
+    tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    h3 {
+      padding: 0px;
+      margin: 0px;
+    }
+     
     </style>
   </head>
   <body>
-    <div class="list">
-      <h3>Activity Log</h3>
-      <p>${statusString && statusString}</p>
-      <ul>
-        ${
-    data.map((x) => `
-          <li>${x.action} at ${
-      new Date(x.time).toLocaleTimeString("nb-NO")
-    }</li>
-        `).join("")
+      <div class="status_container container">
+        <div>
+          <p class="tag">Current status</p>
+          <p class="info">${statusString && statusString}</p>
+        </div>
+      </div>
+      <div class="container">
+      <h3>Recent actions</h3>
+      <table>
+      <tr>
+          <th>Action</th>
+          <th>Time</th>
+          <th>Created at</th>
+      </tr>
+      ${
+    data.map((action) => `
+      <tr>
+          <td>${actionMap[action.action]}</td>
+          <td>${new Date(action.time).toLocaleTimeString("nb-NO")}</td>
+          <td>${new Date(action.created_at).toLocaleTimeString("nb-NO")}</td>
+      </tr>
+  `).join("")
   }
-      </ul>
-    </div>
+  </table>
+      </div>
+      
   </body>
   </html>
   `;
