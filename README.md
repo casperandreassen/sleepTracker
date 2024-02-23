@@ -1,0 +1,1 @@
+This repo contains a analysis module as well as a simple supabase config for tracking sleeping patterns. I have created a iOS Shortcut for inserting / deleting data from the supabase database such that this easily can be done on a phone.
