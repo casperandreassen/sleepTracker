@@ -5,14 +5,27 @@ import { html } from "https://deno.land/x/html/mod.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { Database } from "../schema.gen.ts";
 
-console.log("Hello from Functions!");
-
 function convertMilliSecondsToTimeString(milli: number): string {
   const hours = Math.floor((milli / (1000 * 60 * 60)) % 24);
   const minutes = Math.floor((milli / (1000 * 60)) % 60);
   return hours == 0
     ? `${minutes} minutes`
     : `${hours} hours and ${minutes} minutes.`;
+}
+
+function formatDate(inputDate: Date) {
+  const date = new Date(inputDate);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  if (date.toDateString() === today.toDateString()) {
+    return "Today";
+  } else if (date.toDateString() === yesterday.toDateString()) {
+    return "Yesterday";
+  } else {
+    return date.toLocaleDateString("nb-NO", { timeZone: "Europe/Oslo" });
+  }
 }
 
 const actionMap = {
@@ -32,8 +45,15 @@ Deno.serve(async (req) => {
   if (!user_id) {
     return new Response("Could not get userid", { status: 404 });
   }
-  const { data, error } = await supabaseClient.from("actions").select("*")
-    .order("time").eq("user_id", user_id).limit(5);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Set time to the beginning of the day
+
+  const { data, error } = await supabaseClient
+    .from("actions")
+    .select("*")
+    .order("time")
+    .eq("user_id", user_id)
+    .limit(5);
 
   if (error) {
     return new Response(error.message, { status: 500 });
@@ -62,12 +82,15 @@ Deno.serve(async (req) => {
       body {
         background-color: #EEEEEE;
         font-family: Arial, Helvetica, sans-serif;
-        margin: 20px;
+        margin-left: auto;
+        margin-right: auto;
+        margin-top: 20px;
         padding: 0;
         color: #3D3B40;
         display: flex;
         flex-direction: column;
         align-items: center;
+        align-content: center;
         gap: 15px;
         max-width: 90%;
         min-width: 50%;
@@ -150,14 +173,18 @@ Deno.serve(async (req) => {
       <tr>
           <th>Action</th>
           <th>Time</th>
-          <th>Created at</th>
+          <th>Day</th>
       </tr>
       ${
     data.map((action) => `
       <tr>
           <td>${actionMap[action.action]}</td>
-          <td>${new Date(action.time).toLocaleTimeString("nb-NO")}</td>
-          <td>${new Date(action.created_at).toLocaleTimeString("nb-NO")}</td>
+          <td>${
+      new Date(action.time).toLocaleTimeString("nb-NO", {
+        timeZone: "Europe/Oslo",
+      })
+    }</td><td>${formatDate(new Date(action.time))}</td>
+          
       </tr>
   `).join("")
   }
