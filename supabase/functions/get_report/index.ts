@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     .select("*")
     .order("time")
     .eq("user_id", user_id)
-    .limit(5);
+    .limit(15);
 
   if (error) {
     return new Response(error.message, { status: 500 });
@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
           <th>Day</th>
       </tr>
       ${
-    data.map((action) => `
+    data.reverse().map((action) => `
       <tr>
           <td>${actionMap[action.action]}</td>
           <td>${
